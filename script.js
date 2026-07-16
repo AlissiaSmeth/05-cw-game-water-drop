@@ -17,6 +17,7 @@ const feedbackEl = document.getElementById("feedback");
 const milestoneEl = document.getElementById("milestones");
 const endMessageEl = document.getElementById("end-message");
 const startBtn = document.getElementById("start-btn");
+const resetBtn = document.getElementById("reset-btn");
 
 const hypeMessages = [
   "Quick tap! +1 point",
@@ -44,6 +45,7 @@ const losingMessages = [
 ];
 
 startBtn.addEventListener("click", startGame);
+resetBtn.addEventListener("click", resetGame);
 buildBoard();
 
 function buildBoard() {
@@ -60,20 +62,10 @@ function startGame() {
     return;
   }
 
+  resetGameStateForNewRound();
   gameRunning = true;
-  score = 0;
-  timeLeft = GAME_DURATION;
-  currentSpawnDelay = 720;
-  reachedMilestones.clear();
-  scoreEl.textContent = String(score);
-  scoreEl.classList.remove("good-hit", "bad-hit");
-  timeEl.textContent = String(timeLeft);
   startBtn.textContent = "Playing...";
   startBtn.disabled = true;
-  feedbackEl.textContent = "Tap every yellow can before it drops back!";
-  milestoneEl.textContent = "Milestones: 10 | 20 | 30 | 45";
-  endMessageEl.textContent = "";
-  board.querySelectorAll(".target").forEach((target) => target.remove());
 
   timerInterval = setInterval(() => {
     timeLeft -= 1;
@@ -177,6 +169,16 @@ function endGame() {
   startBtn.textContent = "Play Again";
 }
 
+function resetGame() {
+  clearInterval(timerInterval);
+  clearTimeout(spawnTimeout);
+  gameRunning = false;
+  resetGameStateForNewRound();
+  feedbackEl.textContent = "Game reset. Press Start to play.";
+  startBtn.disabled = false;
+  startBtn.textContent = "Start Game";
+}
+
 function randomFrom(messages) {
   return messages[Math.floor(Math.random() * messages.length)];
 }
@@ -186,4 +188,18 @@ function pulseScore(className) {
   // Force reflow so repeated fast taps re-trigger the animation.
   void scoreEl.offsetWidth;
   scoreEl.classList.add(className);
+}
+
+function resetGameStateForNewRound() {
+  score = 0;
+  timeLeft = GAME_DURATION;
+  currentSpawnDelay = 720;
+  reachedMilestones.clear();
+  scoreEl.textContent = String(score);
+  scoreEl.classList.remove("good-hit", "bad-hit");
+  timeEl.textContent = String(timeLeft);
+  timeEl.parentElement.classList.remove("danger");
+  milestoneEl.textContent = "Milestones: 10 | 20 | 30 | 45";
+  endMessageEl.textContent = "";
+  board.querySelectorAll(".target").forEach((target) => target.remove());
 }
