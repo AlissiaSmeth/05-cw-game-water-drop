@@ -8,16 +8,23 @@
 </head>
 <body>
     <div class="game-wrapper">
-        <h1 class="game-title">Water Drop</h1>
-        <p class="game-tagline">Catch the good drops, avoid the bad ones!</p>
+        <img class="brand-logo" src="img/cw_logo-horizontal.png" alt="charity: water logo">
+        <h1 class="game-title">Jerry Can Dash</h1>
+        <p class="game-tagline">Tap cans fast. Dodge traps. Hit every milestone.</p>
         <div class="score-panel">
             <div class="score">Score: <span id="score">0</span></div>
             <div class="timer">Time: <span id="time">30</span>s</div>
             <button id="start-btn">Start Game</button>
         </div>
-        
-        <div id="game-container">
+
+        <p id="feedback" class="feedback">Press Start to play.</p>
+        <div id="milestones" class="milestones" aria-live="polite">Milestones: 10 | 20 | 30 | 45</div>
+
+        <div id="game-container" aria-label="Game board">
+            <div id="board" class="board" aria-live="polite"></div>
         </div>
+
+        <p id="end-message" class="end-message" aria-live="polite"></p>
     </div>
     
     <script src="script.js"></script>

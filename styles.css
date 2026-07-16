@@ -25,121 +25,300 @@ Fonts:
 }
 
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-items: center;
     min-height: 100vh;
-    background-color: #f0f0f0;
-    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at 20% 20%, #fff5cc 0%, #ffefaa 35%, #ffd95f 100%);
+    font-family: Avenir, "Trebuchet MS", sans-serif;
+    color: #131313;
+    padding: 20px;
 }
 
 .game-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 14px;
+    width: min(920px, 100%);
+}
+
+.brand-logo {
+    width: min(300px, 70vw);
+    height: auto;
 }
 
 .score-panel {
     display: flex;
-    justify-content: space-between;  /* Space between score and button */
+    justify-content: space-between;
     align-items: center;
-    width: 800px;
-    padding: 10px;
+    width: min(800px, 100%);
+    padding: 12px 14px;
     background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(19, 19, 19, 0.12);
+    border: 2px solid #131313;
 }
 
 .timer {
     flex: 0 1 auto;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
 }
 
 #game-container {
-    width: 800px;
-    height: 600px;
-    background-color: #e6f7ff;
-    border: 2px solid #333;
-    border-radius: 8px;
+    width: min(800px, 100%);
+    background: linear-gradient(180deg, #2e9df7 0%, #69bcf8 100%);
+    border: 3px solid #131313;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 14px;
+}
+
+.hole {
     position: relative;
+    height: 130px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.46));
+    box-shadow: inset 0 14px 20px rgba(0, 0, 0, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.35);
     overflow: hidden;
 }
 
+.hole::after {
+    content: "";
+    position: absolute;
+    bottom: 10px;
+    left: 14px;
+    right: 14px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(19, 19, 19, 0.45);
+}
+
+.target {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 72px;
+    height: 88px;
+    border: 0;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transform: translate(-50%, 120%);
+    cursor: pointer;
+    animation: pop-in 140ms ease-out forwards;
+}
+
+.target.good {
+    background-image: url("img/water-can-transparent.png");
+}
+
+.target.obstacle {
+    background-image: url("img/water-can-transparent.png");
+    filter: grayscale(1) contrast(1.2) brightness(0.72);
+}
+
+.target.obstacle::before {
+    content: "!";
+    position: absolute;
+    top: -8px;
+    right: -4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background-color: #f5402c;
+    border: 2px solid #fff;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.target.hit {
+    animation: pop-hit 180ms ease-in forwards;
+}
 
 #start-btn {
-    padding: 8px 16px;
-    background-color: #4CAF50;
-    color: white;
+    padding: 9px 16px;
+    background-color: #159a48;
+    color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
+    font-weight: 700;
 }
 
 #start-btn:hover {
-    background-color: #45a049;
+    background-color: #127a3a;
 }
 
 .score {
-    flex: 0 1 auto;  /* Don't grow, can shrink, auto basis */
-    font-size: 24px;
+    flex: 0 1 auto;
+    font-size: 22px;
     font-weight: bold;
 }
 
-.water-drop {
-    position: absolute;
-    width: 60px;  /* increased from 40px */
-    height: 60px; /* increased from 40px */
-    background-color: #0099ff;
-    border-radius: 50%;
-    animation: dropFall linear forwards;
-    transform-origin: center;
-    cursor: pointer;
-    padding: 15px;  /* Add padding for larger click area */
-    margin: -15px;  /* Offset padding to maintain visual size */
-    transition: transform 0.1s ease;  /* Smooth hover effect */
+.score.good-hit {
+    animation: score-good 220ms ease;
+    color: #159a48;
 }
 
-.water-drop:hover {
-    transform: scale(1.1);  /* Slight grow effect on hover */
-}
-
-.bad-drop {
-    background-color: #ff4444;
+.score.bad-hit {
+    animation: score-bad 220ms ease;
+    color: #f5402c;
 }
 
 .game-title {
     color: #131313;
-    font-size: 48px;
-    margin-top: 0;
-    margin-bottom: 5px;  /* reduced from 20px */
+    font-size: clamp(36px, 6vw, 52px);
     text-align: center;
+    line-height: 1;
 }
 
 .game-tagline {
-    color: #666;
+    color: #2b2b2b;
     font-size: 18px;
-    margin-bottom: 20px;
     text-align: center;
 }
 
-@keyframes dropFall {
+.feedback,
+.milestones,
+.end-message {
+    width: min(800px, 100%);
+    text-align: center;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-radius: 10px;
+}
+
+.feedback {
+    background-color: #fff;
+    min-height: 40px;
+}
+
+.milestones {
+    background-color: #131313;
+    color: #fff;
+}
+
+.end-message {
+    min-height: 42px;
+    color: #131313;
+}
+
+.milestone-pop {
+    animation: milestone-flash 420ms ease;
+}
+
+.danger {
+    animation: pulse-danger 300ms ease-in-out 2;
+}
+
+@keyframes pop-in {
     from {
-        transform: translateY(-20px);
+        transform: translate(-50%, 120%);
     }
     to {
-        transform: translateY(600px);
+        transform: translate(-50%, 0%);
+    }
+}
+
+@keyframes pop-hit {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, 100%) scale(0.7);
+    }
+}
+
+@keyframes milestone-flash {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.03);
+        background-color: #4fcb53;
+        color: #131313;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse-danger {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-4px);
+    }
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+@keyframes score-good {
+    from {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes score-bad {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-3px);
+    }
+    75% {
+        transform: translateX(3px);
     }
 }
 
 @media (max-width: 850px) {
-    .game-wrapper, .score-panel, #game-container {
-        width: 95vw;
+    .board {
+        grid-template-columns: repeat(3, minmax(90px, 1fr));
     }
-    
-    #game-container {
-        height: 70vh;
+
+    .hole {
+        height: 118px;
+    }
+
+    .score-panel {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 560px) {
+    .board {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+    }
+
+    .hole {
+        height: 112px;
+    }
+
+    .target {
+        width: 62px;
+        height: 80px;
     }
 }
