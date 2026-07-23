@@ -364,7 +364,7 @@ function resetGameStateForNewRound() {
   scoreEl.classList.remove("good-hit", "bad-hit");
   timeEl.parentElement.classList.remove("danger");
 
-  endMessageEl.textContent = "; 
+  endMessageEl.textContent = String();
   
   updateMilestoneDisplay();
 
