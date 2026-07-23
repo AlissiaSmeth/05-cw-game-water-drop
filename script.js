@@ -2,36 +2,34 @@ const difficultySettings = {
   easy: {
     duration: 45,
     winScore: 10,
-    spawnDelay: 950
+    spawnDelay: 950,
+    targetLife: 1200
   },
   normal: {
     duration: 30,
     winScore: 20,
-    spawnDelay: 720
+    spawnDelay: 720,
+    targetLife: 900
   },
   hard: {
     duration: 20,
     winScore: 30,
-    spawnDelay: 450
+    spawnDelay: 450,
+    targetLife: 650
   }
 };
 
 const TOTAL_HOLES = 12;
-const MILESTONES = [10, 20, 30, 45];
 
 let selectedDifficulty = "normal";
-let GAME_DURATION = difficultySettings.normal.duration;
-let WIN_SCORE = difficultySettings.normal.winScore;
-let startingSpawnDelay = difficultySettings.normal.spawnDelay;
-
 let gameRunning = false;
 let score = 0;
-let timeLeft = GAME_DURATION;
-let spawnTimeout;
-let timerInterval;
-let currentSpawnDelay = startingSpawnDelay;
-
-const reachedMilestones = new Set();
+let timeLeft = 30;
+let winScore = 20;
+let spawnDelay = 720;
+let targetLife = 900;
+let timerInterval = null;
+let spawnTimeout = null;
 
 const board = document.getElementById("board");
 const scoreEl = document.getElementById("score");
@@ -43,92 +41,98 @@ const startBtn = document.getElementById("start-btn");
 const resetBtn = document.getElementById("reset-btn");
 const difficultyEl = document.getElementById("difficulty");
 
-const hypeMessages = [
-  "Quick tap! +1 point",
-  "Hydration hero move!",
-  "Nice reflexes!",
-  "You are on a streak!"
-];
+function checkRequiredElements() {
+  const requiredElements = [
+    board,
+    scoreEl,
+    timeEl,
+    feedbackEl,
+    milestoneEl,
+    endMessageEl,
+    startBtn,
+    resetBtn,
+    difficultyEl
+  ];
 
-const obstacleMessages = [
-  "Trap can! -2 points",
-  "Watch it, that was a decoy!",
-  "Obstacle hit. Recover fast!"
-];
+  return requiredElements.every(function (element) {
+    return element !== null;
+  });
+}
 
-const winningMessages = [
-  "Huge win! You crushed the challenge.",
-  "Excellent work. Your taps changed the game.",
-  "Top-tier run. You are a jerry can legend."
-];
+if (!checkRequiredElements()) {
+  console.error("One or more required HTML elements are missing.");
+} else {
+  initializeGame();
+}
 
-const losingMessages = [
-  "Good run. Go again and beat your best score.",
-  "Close one. One more try and you have this.",
-  "You are getting faster. Jump back in."
-];
+function initializeGame() {
+  buildBoard();
+  applyDifficulty();
 
-startBtn.addEventListener("click", startGame);
-resetBtn.addEventListener("click", resetGame);
-difficultyEl.addEventListener("change", setDifficulty);
-
-buildBoard();
-setDifficulty();
+  startBtn.addEventListener("click", startGame);
+  resetBtn.addEventListener("click", resetGame);
+  difficultyEl.addEventListener("change", applyDifficulty);
+}
 
 function buildBoard() {
-  // Prevent duplicate holes if this function runs more than once.
-  board.innerHTML = "";
+  board.replaceChildren();
 
   for (let i = 0; i < TOTAL_HOLES; i += 1) {
     const hole = document.createElement("div");
-
     hole.className = "hole";
-    hole.dataset.holeId = String(i);
-
     board.appendChild(hole);
   }
 }
 
-function setDifficulty() {
+function applyDifficulty() {
   selectedDifficulty = difficultyEl.value;
 
   const settings = difficultySettings[selectedDifficulty];
 
-  GAME_DURATION = settings.duration;
-  WIN_SCORE = settings.winScore;
-  startingSpawnDelay = settings.spawnDelay;
-  currentSpawnDelay = startingSpawnDelay;
-  timeLeft = GAME_DURATION;
+  timeLeft = settings.duration;
+  winScore = settings.winScore;
+  spawnDelay = settings.spawnDelay;
+  targetLife = settings.targetLife;
 
+  scoreEl.textContent = "0";
   timeEl.textContent = String(timeLeft);
+  milestoneEl.textContent = "Goal: " + winScore + " points";
 
   feedbackEl.textContent =
-    `${capitalize(selectedDifficulty)} mode: ` +
-    `Collect ${WIN_SCORE} points in ${GAME_DURATION} seconds.`;
+    capitalize(selectedDifficulty) +
+    " mode: Reach " +
+    winScore +
+    " points in " +
+    timeLeft +
+    " seconds.";
+
+  endMessageEl.textContent = String();
 }
 
 function startGame() {
-  // Stop any previous timers before beginning a new game.
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimeout);
+  stopTimers();
+  clearTargets();
 
   const settings = difficultySettings[selectedDifficulty];
 
-  GAME_DURATION = settings.duration;
-  WIN_SCORE = settings.winScore;
-  startingSpawnDelay = settings.spawnDelay;
-
-  resetGameStateForNewRound();
-
+  score = 0;
+  timeLeft = settings.duration;
+  winScore = settings.winScore;
+  spawnDelay = settings.spawnDelay;
+  targetLife = settings.targetLife;
   gameRunning = true;
+
+  scoreEl.textContent = "0";
+  timeEl.textContent = String(timeLeft);
+  milestoneEl.textContent = "Goal: " + winScore + " points";
+  feedbackEl.textContent = "Go! Tap the water cans and avoid the traps.";
+  endMessageEl.textContent = String();
+
   difficultyEl.disabled = true;
-  startBtn.textContent = "Playing...";
   startBtn.disabled = true;
+  startBtn.textContent = "Playing...";
 
-  feedbackEl.textContent =
-    `Go! Reach ${WIN_SCORE} points before time runs out.`;
-
-  timerInterval = setInterval(() => {
+  timerInterval = setInterval(function () {
     timeLeft -= 1;
     timeEl.textContent = String(timeLeft);
 
@@ -141,160 +145,82 @@ function startGame() {
     }
   }, 1000);
 
-  scheduleSpawn();
+  scheduleTarget();
 }
 
-function scheduleSpawn() {
+function scheduleTarget() {
   if (!gameRunning) {
     return;
   }
 
-  spawnTarget();
+  createTarget();
 
-  // The game gradually becomes faster during the round.
-  currentSpawnDelay = Math.max(280, currentSpawnDelay - 8);
-
-  spawnTimeout = setTimeout(scheduleSpawn, currentSpawnDelay);
+  spawnTimeout = setTimeout(function () {
+    scheduleTarget();
+  }, spawnDelay);
 }
 
-function spawnTarget() {
-  if (!gameRunning) {
+function createTarget() {
+  const holes = Array.from(board.querySelectorAll(".hole"));
+
+  const availableHoles = holes.filter(function (hole) {
+    return hole.querySelector(".target") === null;
+  });
+
+  if (availableHoles.length === 0) {
     return;
   }
 
-  const holes = Array.from(document.querySelectorAll(".hole"));
-
-  const openHoles = holes.filter(
-    (hole) => !hole.querySelector(".target")
-  );
-
-  if (openHoles.length === 0) {
-    return;
-  }
-
-  const randomIndex = Math.floor(Math.random() * openHoles.length);
-  const hole = openHoles[randomIndex];
+  const randomHole =
+    availableHoles[Math.floor(Math.random() * availableHoles.length)];
 
   const target = document.createElement("button");
   const isObstacle = Math.random() < 0.22;
 
-  target.className = `target ${isObstacle ? "obstacle" : "good"}`;
   target.type = "button";
+  target.className = isObstacle
+    ? "target obstacle"
+    : "target good";
 
   target.setAttribute(
     "aria-label",
-    isObstacle ? "Obstacle can" : "Water can"
+    isObstacle ? "Trap can" : "Water can"
   );
 
-  // Harder modes make targets disappear more quickly.
-  const targetLifeSettings = {
-    easy: {
-      good: 1200,
-      obstacle: 1350
-    },
-    normal: {
-      good: 860,
-      obstacle: 1000
-    },
-    hard: {
-      good: 650,
-      obstacle: 800
-    }
-  };
-
-  const targetLife = isObstacle
-    ? targetLifeSettings[selectedDifficulty].obstacle
-    : targetLifeSettings[selectedDifficulty].good;
-
-  const removeTimer = setTimeout(() => {
+  const removeTargetTimer = setTimeout(function () {
     target.remove();
   }, targetLife);
 
-  target.addEventListener("click", () => {
+  target.addEventListener("click", function () {
     if (!gameRunning || target.classList.contains("hit")) {
       return;
     }
 
-    clearTimeout(removeTimer);
-
+    clearTimeout(removeTargetTimer);
     target.classList.add("hit");
-
-    setTimeout(() => {
-      target.remove();
-    }, 170);
 
     if (isObstacle) {
       score = Math.max(0, score - 2);
-
-      feedbackEl.textContent = randomFrom(obstacleMessages);
-      scoreEl.textContent = String(score);
-
-      pulseScore("bad-hit");
-      return;
+      feedbackEl.textContent = "Trap can! You lost 2 points.";
+      animateScore("bad-hit");
+    } else {
+      score += 1;
+      feedbackEl.textContent = "Great job! You collected water.";
+      animateScore("good-hit");
     }
 
-    score += 1;
-
     scoreEl.textContent = String(score);
-    feedbackEl.textContent = randomFrom(hypeMessages);
 
-    pulseScore("good-hit");
-    checkMilestone(score);
+    setTimeout(function () {
+      target.remove();
+    }, 150);
 
-    // End immediately when the player reaches the selected goal.
-    if (score >= WIN_SCORE) {
+    if (score >= winScore) {
       endGame();
     }
   });
 
-  hole.appendChild(target);
-}
-
-function checkMilestone(currentScore) {
-  const newMilestone = MILESTONES.find(
-    (goal) =>
-      currentScore >= goal &&
-      goal <= WIN_SCORE &&
-      !reachedMilestones.has(goal)
-  );
-
-  if (!newMilestone) {
-    return;
-  }
-
-  reachedMilestones.add(newMilestone);
-
-  feedbackEl.textContent =
-    `Milestone hit: ${newMilestone}! Keep going!`;
-
-  milestoneEl.classList.add("milestone-pop");
-  updateMilestoneDisplay();
-
-  setTimeout(() => {
-    milestoneEl.classList.remove("milestone-pop");
-  }, 420);
-}
-
-function updateMilestoneDisplay() {
-  const activeMilestones = MILESTONES.filter(
-    (goal) => goal <= WIN_SCORE
-  );
-
-  // Make sure the final winning score appears in the list.
-  if (!activeMilestones.includes(WIN_SCORE)) {
-    activeMilestones.push(WIN_SCORE);
-    activeMilestones.sort((a, b) => a - b);
-  }
-
-  const status = activeMilestones
-    .map((goal) => {
-      return reachedMilestones.has(goal)
-        ? `✓ ${goal}`
-        : String(goal);
-    })
-    .join(" | ");
-
-  milestoneEl.textContent = `Milestones: ${status}`;
+  randomHole.appendChild(target);
 }
 
 function endGame() {
@@ -303,87 +229,76 @@ function endGame() {
   }
 
   gameRunning = false;
-
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimeout);
+  stopTimers();
+  clearTargets();
 
   timeEl.parentElement.classList.remove("danger");
-
-  board.querySelectorAll(".target").forEach((target) => {
-    target.remove();
-  });
-
-  const didWin = score >= WIN_SCORE;
-
-  endMessageEl.textContent = didWin
-    ? randomFrom(winningMessages)
-    : randomFrom(losingMessages);
-
-  if (didWin) {
-    feedbackEl.textContent =
-      `You won with ${score} points! Goal: ${WIN_SCORE}.`;
-  } else {
-    feedbackEl.textContent =
-      `Final score: ${score}. You needed ${WIN_SCORE} points.`;
-  }
-
-  scoreEl.classList.remove("good-hit", "bad-hit");
-
   difficultyEl.disabled = false;
   startBtn.disabled = false;
   startBtn.textContent = "Play Again";
+
+  if (score >= winScore) {
+    endMessageEl.textContent =
+      "You won! You reached " +
+      score +
+      " points and supported the clean water mission.";
+  } else {
+    endMessageEl.textContent =
+      "Time is up. You scored " +
+      score +
+      " points. Your goal was " +
+      winScore +
+      ".";
+  }
+
+  feedbackEl.textContent = "Final score: " + score;
 }
 
 function resetGame() {
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimeout);
-
   gameRunning = false;
+  stopTimers();
+  clearTargets();
 
-  resetGameStateForNewRound();
+  score = 0;
 
-  feedbackEl.textContent =
-    `${capitalize(selectedDifficulty)} mode ready. ` +
-    `Reach ${WIN_SCORE} points in ${GAME_DURATION} seconds.`;
+  const settings = difficultySettings[selectedDifficulty];
+
+  timeLeft = settings.duration;
+  winScore = settings.winScore;
+  spawnDelay = settings.spawnDelay;
+  targetLife = settings.targetLife;
+
+  scoreEl.textContent = "0";
+  timeEl.textContent = String(timeLeft);
+  milestoneEl.textContent = "Goal: " + winScore + " points";
+  feedbackEl.textContent = "Press Start to play.";
+  endMessageEl.textContent = String();
+
+  timeEl.parentElement.classList.remove("danger");
+  scoreEl.classList.remove("good-hit", "bad-hit");
 
   difficultyEl.disabled = false;
   startBtn.disabled = false;
   startBtn.textContent = "Start Game";
 }
 
-function resetGameStateForNewRound() {
-  score = 0;
-  timeLeft = GAME_DURATION;
-  currentSpawnDelay = startingSpawnDelay;
+function stopTimers() {
+  clearInterval(timerInterval);
+  clearTimeout(spawnTimeout);
 
-  reachedMilestones.clear();
+  timerInterval = null;
+  spawnTimeout = null;
+}
 
-  scoreEl.textContent = String(score);
-  timeEl.textContent = String(timeLeft);
-
-  scoreEl.classList.remove("good-hit", "bad-hit");
-  timeEl.parentElement.classList.remove("danger");
-
-  endMessageEl.textContent = String();
-  
-  updateMilestoneDisplay();
-
-  board.querySelectorAll(".target").forEach((target) => {
+function clearTargets() {
+  board.querySelectorAll(".target").forEach(function (target) {
     target.remove();
   });
 }
 
-function randomFrom(messages) {
-  const randomIndex = Math.floor(Math.random() * messages.length);
-  return messages[randomIndex];
-}
-
-function pulseScore(className) {
+function animateScore(className) {
   scoreEl.classList.remove("good-hit", "bad-hit");
-
-  // Forces the animation to restart after repeated fast clicks.
   void scoreEl.offsetWidth;
-
   scoreEl.classList.add(className);
 }
 
