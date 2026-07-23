@@ -1,4 +1,25 @@
-const GAME_DURATION = 30;
+const difficultySettings = {
+  easy: {
+    duration: 45,
+    winScore: 10,
+    spawnDelay: 950
+  },
+  normal: {
+    duration: 30,
+    winScore: 20,
+    spawnDelay: 720
+  },
+  hard: {
+    duration: 20,
+    winScore: 30,
+    spawnDelay: 450
+  }
+};
+
+let selectedDifficulty = "normal";
+let GAME_DURATION = difficultySettings.normal.duration;
+let WIN_SCORE = difficultySettings.normal.winScore;
+
 const TOTAL_HOLES = 12;
 const MILESTONES = [10, 20, 30, 45];
 
@@ -7,7 +28,7 @@ let score = 0;
 let timeLeft = GAME_DURATION;
 let spawnTimeout;
 let timerInterval;
-let currentSpawnDelay = 720;
+let currentSpawnDelay = difficultySettings.normal.spawnDelay;
 const reachedMilestones = new Set();
 
 const board = document.getElementById("board");
@@ -18,6 +39,27 @@ const milestoneEl = document.getElementById("milestones");
 const endMessageEl = document.getElementById("end-message");
 const startBtn = document.getElementById("start-btn");
 const resetBtn = document.getElementById("reset-btn");
+
+const difficultyEl = document.getElementById("difficulty");
+
+function setDifficulty() {
+  selectedDifficulty = difficultyEl.value;
+
+  const settings = difficultySettings[selectedDifficulty];
+
+  GAME_DURATION = settings.duration;
+  WIN_SCORE = settings.winScore;
+  currentSpawnDelay = settings.spawnDelay;
+  timeLeft = GAME_DURATION;
+
+  timeEl.textContent = timeLeft;
+
+  feedbackEl.textContent =
+    `${selectedDifficulty.toUpperCase()} mode: ` +
+    `${WIN_SCORE} points needed in ${GAME_DURATION} seconds.`;
+}
+
+difficultyEl.addEventListener("change", setDifficulty);
 
 const hypeMessages = [
   "Quick tap! +1 point",
@@ -58,8 +100,16 @@ function buildBoard() {
 }
 
 function startGame() {
-  if (gameRunning) {
-    return;
+  const settings = difficultySettings[selectedDifficulty];
+
+GAME_DURATION = settings.duration;
+WIN_SCORE = settings.winScore;
+currentSpawnDelay = settings.spawnDelay;
+
+score = 0;
+timeLeft = GAME_DURATION;
+
+difficultyEl.disabled = true;
   }
 
   resetGameStateForNewRound();
@@ -75,6 +125,8 @@ function startGame() {
       timeEl.parentElement.classList.add("danger");
     }
 
+    difficultyEl.disabled = false;
+    
     if (timeLeft <= 0) {
       endGame();
     }
@@ -191,7 +243,7 @@ function pulseScore(className) {
 }
 
 function resetGameStateForNewRound() {
-  score = 0;
+  score >= WIN_SCORE;
   timeLeft = GAME_DURATION;
   currentSpawnDelay = 720;
   reachedMilestones.clear();
@@ -202,4 +254,5 @@ function resetGameStateForNewRound() {
   milestoneEl.textContent = "Milestones: 10 | 20 | 30 | 45";
   endMessageEl.textContent = "";
   board.querySelectorAll(".target").forEach((target) => target.remove());
+  
 }
