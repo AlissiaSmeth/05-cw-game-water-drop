@@ -1,59 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Drop Game</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Jerry Can Dash</title>
+
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <div class="game-wrapper">
-        <img class="brand-logo" src="img/cw_logo-horizontal.png" alt="charity: water logo">
-        <h1 class="game-title">Jerry Can Dash</h1>
-        <p class="game-tagline">Tap cans fast. Dodge traps. Hit every milestone.</p>
-        <div class="score-panel">
-            <div class="score">Score: <span id="score">0</span></div>
-            <div class="timer">Time: <span id="time">30</span>s</div>
-            <button id="start-btn">Start Game</button>
-            <button id="reset-btn" type="button">Reset</button>
-        </div>
-
-        <p id="feedback" class="feedback">Press Start to play.</p>
-        <div id="milestones" class="milestones" aria-live="polite">Milestones: 10 | 20 | 30 | 45</div>
-
-        <div id="game-container" aria-label="Game board">
-            <div id="board" class="board" aria-live="polite"></div>
-        </div>
-
-        <p id="end-message" class="end-message" aria-live="polite"></p>
-    </div>
-    
-    <script src="script.js"></script>
-<footer class="charity-footer">
-  <h2>Help Bring Clean Water to Everyone</h2>
-
-  <p>
-    Learn more about charity: water and support their mission to provide
-    clean and safe drinking water to people around the world.
-  </p>
-
-  <div class="footer-links">
-    <a
-      href="https://www.charitywater.org/"
-      target="_blank"
-      rel="noopener noreferrer"
+  <main class="game-wrapper">
+    <img
+      class="brand-logo"
+      src="img/cw_logo-horizontal.png"
+      alt="charity: water logo"
     >
-      Visit charity: water
-    </a>
 
-    <a
-      href="https://www.charitywater.org/donate"
-      target="_blank"
-      rel="noopener noreferrer"
+    <h1 class="game-title">Jerry Can Dash</h1>
+
+    <p class="game-tagline">
+      Tap water cans fast, dodge traps, and reach your goal.
+    </p>
+
+    <!-- Difficulty selector -->
+    <div class="difficulty-section">
+      <label for="difficulty">Choose difficulty:</label>
+
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+
+    <!-- Score and controls -->
+    <div class="score-panel">
+      <div class="score">
+        Score:
+        <span id="score">0</span>
+      </div>
+
+      <div class="timer">
+        Time:
+        <span id="time">30</span>s
+      </div>
+
+      <button id="start-btn" type="button">
+        Start Game
+      </button>
+
+      <button id="reset-btn" type="button">
+        Reset
+      </button>
+    </div>
+
+    <!-- Game feedback -->
+    <p
+      id="feedback"
+      class="feedback"
+      aria-live="polite"
     >
-      Donate Now
-    </a>
-  </div>
-</footer>
+      Normal mode: Collect 20 points in 30 seconds.
+    </p>
+
+    <div
+      id="milestones"
+      class="milestones"
+      aria-live="polite"
+    >
+      Milestones: 10 | 20
+    </div>
+
+    <!-- Game board -->
+    <div
+      id="game-container"
+      aria-label="Jerry Can Dash game board"
+    >
+      <div
+        id="board"
+        class="board"
+      ></div>
+    </div>
+
+    <p
+      id="end-message"
+      class="end-message"
+      aria-live="polite"
+    ></p>
+  </main>
+
+  <footer class="charity-footer">
+    <h2>Help Bring Clean Water to Everyone</h2>
+
+    <p>
+      Learn more about charity: water and support its mission to provide
+      clean and safe drinking water to people around the world.
+    </p>
+
+    <div class="footer-links">
+      <a
+        href="https://www.charitywater.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Visit charity: water
+      </a>
+
+      <a
+        href="https://www.charitywater.org/donate"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Donate Now
+      </a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
